@@ -8,8 +8,8 @@
 #SBATCH --mem=80G
 #SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
-#SBATCH --output=outs/dmd%a.out # where STDOUT goes
-#SBATCH --error=outs/dmd%a.err # where STDERR goes
+#SBATCH --output=outs/dmd1%a.out # where STDOUT goes
+#SBATCH --error=outs/dmd1%a.err # where STDERR goes
 #SBATCH --array=0-9
 module load cuda
 
