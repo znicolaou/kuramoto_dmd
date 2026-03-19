@@ -2,7 +2,7 @@ Integrate a large network of Kuramoto oscillators on a gpu with a random or user
 
 # Files in this repository
 The files kuramoto.cu and kuramoto_64.cu contains cuda code to numerically integrate phase oscillators on a gpu. They the Dormand-Prince adaptive timestep 4/5 Runge-Kutta integration scheme implemented in dp45.cu and dp45_64.cu. The 64 bit versions use double precision, and the others use single precision.  
-The jupyter notebook volacno.ibnb plots results. The python script dmd.py calculates an extended DMD spectrum with residuals, employing a truncated SVD (exactDMD) and utilizing dask to handle large datasets with efficient disk usage.
+The python script dmd.py calculates an extended DMD spectrum with residuals, employing a truncated SVD (exactDMD) and utilizing dask to handle large datasets with efficient disk usage.
 
 # Installation
 Create a conda environment with for the jupyter notebook:
@@ -39,7 +39,7 @@ filebase is base file name for output.
 ```
 
 
-# Output and input files
+### Output and input files
 The kuramoto program requires the positional argument FILEBASE, which is the base name for output and input files. 
 
 FILEBASE.out is a text file, which contains the command line that was run on the first line, the runtime, and step information if -v is set.
@@ -97,7 +97,7 @@ options:
 ```
 
 
-# Output and input files
+### Output and input files
 The dmd.py program requires the argument FILEBASE, which is the base name for output and input files. 
 
 FILEBASE/FILESUFFIX{X0,X,u,v} are folders containing dask arrays storing the input trajectories, extended input dictionary, and SVD matrices.
@@ -106,4 +106,6 @@ FILEBASE/FILESUFFIX{lengths,s,errs,A,res,evals,revecs,levecs,phis,phitildes,bs,z
 
 # Slurm batch jobs and plots
 
-To reproduce the results in the manuscript, first submit the sweepk.sh Slurm job array to generate the trajectory data for a range of coupling constants and adjacency ranks. Then submit the jobdmd{1,2,3,4,5}.sh scripts in sequence to calculate the various DMD spectra. Finally, plot the results in the dmdplot.ipynb Jupyter notebook file.
+The jupyter notebook volacno.ibnb contains plots for visualizing the Kuramoto/Daido trajectories. The jupyter notebook onedim.ipynb contains the analysis and plots for the minimal one dimensional model problem. The jupyter notebook dmdplot.ipynb contains plots of the Kuramoto/Daido DMD analysis. 
+
+The slurm job scripts can produce the data required for dmdplot.ipynb. First submit the sweepk.sh job to generate the trajectory data for a range of coupling constants and adjacency ranks. Then submit the jobdmd{1,2,3,4,5}.sh scripts to calculate the various DMD spectra. This will require modifications suited to the cluster in use.  
