@@ -97,7 +97,7 @@ def load_data(filebase0,filesuffix,verbose=False,num_traj=0,D=0,M=1,load=False, 
         print('data load runtime:',stop-start,flush=True)
     return X,lengths,filebase,dt
     
-def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,save=False,chunks=4096):
+def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,save=True,chunks=4096):
     if not load or not os.path.exists(filebase+'s.npy'):
         start=timeit.default_timer()
         if rank is None:
@@ -109,6 +109,7 @@ def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,save=False,chunks
             print('svd runtime:',stop-start,flush=True)
         start=timeit.default_timer()
         s=sda.compute()
+        np.save(filebase+'s.npy',s)
         stop=timeit.default_timer()
         if verbose:
             print('s runtime:',stop-start,flush=True)

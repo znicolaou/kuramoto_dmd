@@ -4,16 +4,23 @@
 #SBATCH --qos=campus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=50G
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=75G
 #SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
-#SBATCH --output=outs/dmd5_%a.out # where STDOUT goes
-#SBATCH --error=outs/dmd5_%a.err # where STDERR goes
-#SBATCH --array=[1-4]
-module load cuda
+#SBATCH --output=outs/dmd2_%a.out # where STDOUT goes
+#SBATCH --error=outs/dmd2_%a.err # where STDERR goes
+#SBATCH --array=0-9
 
-M=${SLURM_ARRAY_TASK_ID}
+M=5
 N=10000
-K=10000
-./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --runpseudo 1 --load 1 --filesuffix ${M} --mem 50GB --filebase data/dmd/${N}/${K}/ 
+filebase0='data/dmd2'
+Ks=(`ls ${filebase0}/${N}`)
+K=${Ks[$SLURM_ARRAY_TASK_ID]}
+if [ ! -f ${filebase0}/${N}/${K}/${M}evals.npy ]; then
+	./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --runpseudo 0 --load 1 --filesuffix ${M} --mem 50GB --filebase ${filebase0}/${N}/${K}/ 
+	rm -rf ${filebase0}/${N}/${K}/${M}X0
+	rm -rf ${filebase0}/${N}/${K}/${M}X
+	rm -rf ${filebase0}/${N}/${K}/${M}v
+	rm -rf ${filebase0}/${N}/${K}/${M}u
+fi
