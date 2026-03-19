@@ -8,8 +8,8 @@
 #SBATCH --mem=75G
 #SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
-#SBATCH --output=outs/dmd1%a.out # where STDOUT goes
-#SBATCH --error=outs/dmd1%a.err # where STDERR goes
+#SBATCH --output=outs/dmd4_%a.out # where STDOUT goes
+#SBATCH --error=outs/dmd4_%a.err # where STDERR goes
 #SBATCH --array=0-9
 
 M=5
@@ -18,9 +18,14 @@ filebase0='data/dmd'
 Ks=(`ls ${filebase0}/${N}`)
 K=${Ks[$SLURM_ARRAY_TASK_ID]}
 if [ ! -f ${filebase0}/${N}/${K}/${M}evals.npy ]; then
-	./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --runpseudo 0 --load 1 --filesuffix ${M} --mem 50GB --filebase ${filebase0}/${N}/${K}/ 
+	./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --runpseudo 0 --load 1 --filesuffix ${M} --mem 40GB --filebase ${filebase0}/${N}/${K}/ 
 	rm -rf ${filebase0}/${N}/${K}/${M}X0
 	rm -rf ${filebase0}/${N}/${K}/${M}X
 	rm -rf ${filebase0}/${N}/${K}/${M}v
 	rm -rf ${filebase0}/${N}/${K}/${M}u
+
+	rm ${filebase0}/${N}/${K}/${M}phis.npy
+	rm ${filebase0}/${N}/${K}/${M}phitildes.npy
+	rm ${filebase0}/${N}/${K}/${M}A.npy
+
 fi
