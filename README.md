@@ -1,8 +1,8 @@
 Integrate a large network of Kuramoto oscillators on a gpu with a random or user-specified adjacency matrix
 
-# Files in the kuramoto repository
+# Files in this repository
 The files kuramoto.cu and kuramoto_64.cu contains cuda code to numerically integrate phase oscillators on a gpu. They the Dormand-Prince adaptive timestep 4/5 Runge-Kutta integration scheme implemented in dp45.cu and dp45_64.cu. The 64 bit versions use double precision, and the others use single precision.  
-The jupyter notebook volacno.ibnb plots results.
+The jupyter notebook volacno.ibnb plots results. The python script dmd.py calculates an extended DMD spectrum with residuals, employing a truncated SVD (exactDMD) and utilizing dask to handle large datasets with efficient disk usage.
 
 # Installation
 Create a conda environment with for the jupyter notebook:
@@ -10,7 +10,7 @@ Create a conda environment with for the jupyter notebook:
 
 The kuramoto.cu program can be compiled on a computer with the nvidia cuda compiler with `nvcc -O3 -lcuda -lcublas -lcurand kuramoto.cu dp45.cu -o kuramoto`.
 
-# Usage
+# kuromoto Usage
 Running `./kuramoto -h` produces the following usage message:
 ```
 usage:	kuramoto [-hvnDRFA] [-N N] [-K K]
@@ -56,3 +56,54 @@ FILEBASEadj.dat contains the adjacency matrix in a binary column, major format. 
 
 FILEBASEfrequencies.dat contains the oscillator frequencies in a binary format. If the -R option is set, the frequencies are loaded from this file rather than being generated randomly.
 
+# dmd.py Usage
+Running `./dmd.py -h` produces the following usage message:
+```
+usage: dmd.py [-h] --filebase FILEBASE [--filesuffix FILESUFFIX] [--verbose VERBOSE] [--pcatol PCATOL] [--resmax RESMAX] [--minr MINR] [--maxr MAXR] [--mini MINI] [--maxi MAXI] [--nr NR] [--ni NI]
+              [--num_traj NUM_TRAJ] [--order ORDER] [--seed SEED] [--M M] [--D D] [--rank RANK] [--savepca SAVEPCA] [--runpseudo RUNPSEUDO] [--dense_amplitudes DENSE_AMPLITUDES] [--load LOAD] [--mem MEM]
+              [--threads THREADS] [--chunks CHUNKS]
+
+Numerical integration of networks of phase oscillators.
+
+options:
+  -h, --help            show this help message and exit
+  --filebase FILEBASE   Base string for file output.
+  --filesuffix FILESUFFIX
+                        Suffix string for file output.
+  --verbose VERBOSE     Verbose printing.
+  --pcatol PCATOL       Reconstruction error cutoff for pca.
+  --resmax RESMAX       Maximum residue.
+  --minr MINR           Pseudospectra real scale.
+  --maxr MAXR           Pseudospectra real scale.
+  --mini MINI           Pseudospectra imaginary scale.
+  --maxi MAXI           Pseudospectra imaginary scale.
+  --nr NR               Number of real pseudospectra points.
+  --ni NI               Number of imaginary pseudospectra points.
+  --num_traj NUM_TRAJ   Number of trajectories.
+  --order ORDER         Number of trajectories.
+  --seed SEED           Random seed for library.
+  --M M                 Number of angle multiples to include in library.
+  --D D                 Number of angle pairs to include in library.
+  --rank RANK           Ritz rank for svd.
+  --savepca SAVEPCA     Save dense PCA data.
+  --runpseudo RUNPSEUDO
+                        Run the pseudospectrum calculation.
+  --dense_amplitudes DENSE_AMPLITUDES
+                        Save dense amplitude data.
+  --load LOAD           Load data from previous runs.
+  --mem MEM             Memory limit for dask.
+  --threads THREADS     Threads for dask.
+  --chunks CHUNKS       Chunk size for dask.
+```
+
+
+# Output and input files
+The dmd.py program requires the argument FILEBASE, which is the base name for output and input files. 
+
+FILEBASE/FILESUFFIX{X0,X,u,v} are folders containing dask arrays storing the input trajectories, extended input dictionary, and SVD matrices.
+
+FILEBASE/FILESUFFIX{lengths,s,errs,A,res,evals,revecs,levecs,phis,phitildes,bs,zs,its,xis,pseudos}.npy output numpy arrays containing the DMD results.
+
+# Slurm batch jobs and plots
+
+To reproduce the results in the manuscript, first submit the sweepk.sh Slurm job array to generate the trajectory data for a range of coupling constants and adjacency ranks. Then submit the jobdmd{1,2,3,4,5}.sh scripts in sequence to calculate the various DMD spectra. Finally, plot the results in the dmdplot.ipynb Jupyter notebook file.
