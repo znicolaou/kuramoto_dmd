@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=isaac-utk0437
-#SBATCH --partition=campus-gpu-bigmem
+#SBATCH --partition=campus-gpu
 #SBATCH --qos=campus-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

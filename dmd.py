@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import shutil
 import numpy as np
 import timeit
 from scipy.linalg import svd, eig, lu_factor, lu_solve,eigh
@@ -90,15 +91,14 @@ def load_data(filebase0,filesuffix,verbose=False,num_traj=0,D=0,M=1,load=False, 
         da.to_npy_stack(filebase+'X',da.rechunk(X,chunks=(chunks,chunks)))
         X=da.rechunk(da.from_npy_stack(filebase+'X'),chunks=(chunks,chunks))
 
-        if not os.path.exists(filebase+'lengths.npy'):
-            np.save(filebase+'lengths.npy',np.array(lengths))
+        np.save(filebase+'lengths.npy',np.array(lengths))
     stop=timeit.default_timer()
     if verbose:
         print('data load runtime:',stop-start,flush=True)
     return X,lengths,filebase,dt
     
-def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,save=True,chunks=4096):
-    if not load or not os.path.exists(filebase+'s.npy'):
+def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,disk=True,chunks=4096):
+    if not load or not os.path.exists(filebase+'s.npy') or not os.path.exists(filebase+'u') or not os.path.exists(filebase+'v'):
         start=timeit.default_timer()
         if rank is None:
             u,sda,v=da.linalg.svd(X)
@@ -131,59 +131,42 @@ def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,save=True,chunks=
     
     #since we'll use u and v many times, compute and store them here
     start=timeit.default_timer()
-    if not os.path.exists(filebase+'u'):
-        os.mkdir(filebase+'u')
-    da.to_npy_stack(filebase+'u',da.rechunk(u[:,:rank],chunks=(chunks,chunks)))
-    u=da.rechunk(da.from_npy_stack(filebase+'u'),chunks=(chunks,chunks))
+    u=da.rechunk(u[:,:rank],chunks=(chunks,chunks))
+    if disk:
+        if not os.path.exists(filebase+'u'):
+            os.mkdir(filebase+'u')
+        da.to_npy_stack(filebase+'u',u)
+        u=da.rechunk(da.from_npy_stack(filebase+'u'),chunks=(chunks,chunks))
+    else:
+        u=da.from_array(u[:,:rank].compute(),chunks=(chunks,chunks))
     stop=timeit.default_timer()
     if verbose:
         print('u runtime:',stop-start,flush=True)
     start=timeit.default_timer()
-    if not os.path.exists(filebase+'v'):
-        os.mkdir(filebase+'v')    
-    da.to_npy_stack(filebase+'v',da.rechunk(v[:rank],chunks=(chunks,chunks)))
+    v=da.rechunk(v[:rank],chunks=(chunks,chunks))
+    if disk:
+        if not os.path.exists(filebase+'v'):
+            os.mkdir(filebase+'v')    
+        da.to_npy_stack(filebase+'v',v)
+        v=da.rechunk(da.from_npy_stack(filebase+'v'),chunks=(chunks,chunks))
+    else:
+        v=da.from_array(v[:rank].compute(),chunks=(chunks,chunks))
     stop=timeit.default_timer()
-    v=da.rechunk(da.from_npy_stack(filebase+'v'),chunks=(chunks,chunks))
     if verbose:
         print('v runtime:',stop-start,flush=True)
     
     if tol is not None:
-        if not load or not os.path.exists(filebase+'errs.npy'):
-            start=timeit.default_timer()
-            errs=[]
-            if rank>10:
-                ranks=np.arange((rank//10),rank+1,rank//10)
-            else:
-                ranks=np.arange(1,rank)
-            for r in ranks:
-                Xtilde=(u[:,:r]*s[:r]).dot(v[:r])
-                err=da.linalg.norm(X-Xtilde)/da.linalg.norm(X)
-                errs=errs+[err.compute()]
-            errs=np.array([ranks,errs])
-    
-            np.save(filebase+'errs.npy',errs)
-            stop=timeit.default_timer()
-            if verbose:
-                print('errs runtime:',stop-start,flush=True)
-        else:
-            errs=np.load(filebase+'errs.npy')
-            
-            r=int(errs[0][-1])
         try:
-            f=interp1d(errs[0],errs[1])
-            r=int(root_scalar(lambda x:f(x)-tol,bracket=(errs[0][0],errs[0][-1])).root)
+            r=np.where(s/s[0]<tol)[0][0]
         except:
-            pass
-        if verbose:
-            print('rank:',r,flush=True)
-            if(r==errs[0][-1]):
-                print('Warning: numerical precision may be limiting achievable pcatol')
+            r=rank
+            print('Warning: numerical precision may be limiting achievable pcatol')
     else:
         r=rank
     
     return s[:r],u[:,:r],v[:r]
 
-def resDMD(U,V,S,X,Yinds,binds,filebase,verbose=False,load=False,save=True,dense_amplitudes=False,chunks=4096):
+def resDMD(U,V,S,X,Yinds,binds,filebase,verbose=False,load=False,dense=0,chunks=4096):
     if not load or not os.path.exists(filebase+'res.npy'):
         start=timeit.default_timer()
         A=X[Yinds].dot(np.conjugate(V).T*1/S).compute()
@@ -234,15 +217,15 @@ def resDMD(U,V,S,X,Yinds,binds,filebase,verbose=False,load=False,save=True,dense
             print('phitildes runtime:',stop-start,flush=True)
         
             
-        if save:
-            np.save(filebase+'A.npy',A)
-            np.save(filebase+'res.npy',res)
-            np.save(filebase+'evals.npy',evals)
-            np.save(filebase+'revecs.npy',revecs)
+        np.save(filebase+'evals.npy',evals)
+        np.save(filebase+'revecs.npy',revecs)
+        np.save(filebase+'res.npy',res)
+        np.save(filebase+'bs.npy',bs)
+        np.save(filebase+'A.npy',A)
+        if dense>1:
             np.save(filebase+'levecs.npy',levecs)
             np.save(filebase+'phis.npy',phis)
             np.save(filebase+'phitildes.npy',phitildes)
-            np.save(filebase+'bs.npy',bs)
 
     else:
         res=np.load(filebase+'res.npy')
@@ -252,9 +235,9 @@ def resDMD(U,V,S,X,Yinds,binds,filebase,verbose=False,load=False,save=True,dense
         bs=np.load(filebase+'bs.npy')
         A=np.load(filebase+'A.npy')
     
-    return evals,revecs,res,phis,bs,A
+    return evals,revecs,res,bs,phis,phitildes,A
 
-def resDMDpseudo(U,A,zs,evals,evecs,filebase,verbose,load=False,save=True):
+def resDMDpseudo(U,A,zs,evals,evecs,filebase,verbose,load=False):
     n0=0
     zs_prev=[]
     zs_new=zs
@@ -295,11 +278,10 @@ def resDMDpseudo(U,A,zs,evals,evecs,filebase,verbose,load=False,save=True):
             pseudo=pseudo+[residue]
             xis=xis+[xi]
             its=its+[m]
-            if save:
-                np.save(filebase+'zs.npy',np.array(zs_prev))
-                np.save(filebase+'pseudo.npy',np.array(pseudo))
-                np.save(filebase+'xis.npy',np.array(xis))
-                np.save(filebase+'its.npy',np.array(its))
+            np.save(filebase+'zs.npy',np.array(zs_prev))
+            np.save(filebase+'pseudo.npy',np.array(pseudo))
+            np.save(filebase+'xis.npy',np.array(xis))
+            np.save(filebase+'its.npy',np.array(its))
     stop=timeit.default_timer()
     if verbose:
         print()
@@ -314,7 +296,7 @@ if __name__ == "__main__":
     parser.add_argument("--filebase", type=str, required=True, dest='filebase', help='Base string for file output.')
     parser.add_argument("--filesuffix", type=str, required=False, dest='filesuffix', default='', help='Suffix string for file output.')
     parser.add_argument("--verbose", type=int, required=False, dest='verbose', default=1, help='Verbose printing.')
-    parser.add_argument("--pcatol", type=float, required=False, dest='pcatol', default=1E-7, help='Reconstruction error cutoff for pca.')
+    parser.add_argument("--pcatol", type=float, required=False, dest='pcatol', default=1E-8, help='Reconstruction error cutoff for pca.')
     parser.add_argument("--resmax", type=float, required=False, dest='resmax', default=None, help='Maximum residue.')
     parser.add_argument("--minr", type=float, required=False, dest='minr', default=-3, help='Pseudospectra real scale.')
     parser.add_argument("--maxr", type=float, required=False, dest='maxr', default=1, help='Pseudospectra real scale.')
@@ -328,9 +310,8 @@ if __name__ == "__main__":
     parser.add_argument("--M", type=int, required=False, dest='M', default=1, help='Number of angle multiples to include in library.')
     parser.add_argument("--D", type=int, required=False, dest='D', default=0, help='Number of angle pairs to include in library.')
     parser.add_argument("--rank", type=int, required=False, dest='rank', default=None, help='Ritz rank for svd.')
-    parser.add_argument("--savepca", type=int, required=False, dest='savepca', default=0, help='Save dense PCA data.')
+    parser.add_argument("--dense", type=int, required=False, dest='dense', default=0, help='Density level for output. 0 for DMD spectra only, 1 for dense amplitudes, 2 for modes, 3 for dask retention')
     parser.add_argument("--runpseudo", type=int, required=False, dest='runpseudo', default=0, help='Run the pseudospectrum calculation.')
-    parser.add_argument("--dense_amplitudes", type=int, required=False, dest='dense_amplitudes', default=0, help='Save dense amplitude data.')
     parser.add_argument("--load", type=int, required=False, dest='load', default=0, help='Load data from previous runs.')
     parser.add_argument("--mem", type=str, required=False, dest='mem', default='20GB', help='Memory limit for dask.')
     parser.add_argument("--threads", type=int, required=False, dest='threads', default=2, help='Threads for dask.')
@@ -358,8 +339,6 @@ if __name__ == "__main__":
     ni = args.ni
     num_traj = args.num_traj
     rank = args.rank
-    pcatol = args.pcatol
-    save = args.savepca
     runpseudo = args.runpseudo
     load = args.load
     chunks = args.chunks
@@ -370,16 +349,16 @@ if __name__ == "__main__":
 
     Xinds=np.setdiff1d(np.arange(np.sum(lengths)),np.cumsum(lengths)-1)
     Yinds=np.setdiff1d(np.arange(np.sum(lengths)),np.concatenate([[0],np.cumsum(lengths)[:-1]]))
-    if args.dense_amplitudes:
+    if args.dense==0:
         binds=Xinds
     else:
         binds=np.array([0]+list(np.cumsum(lengths)[:-1]))
     if verbose:
         print('shape:', X[Xinds].shape, flush=True)
 
-    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,save=save,load=load,chunks=chunks)
+    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,load=load,chunks=chunks)
     
-    evals,evecs,res,phis,bs,A=resDMD(u,v,s,X,Yinds,binds,filebase,verbose,load=load,chunks=chunks)
+    evals,evecs,res,bs,phis,phitildes,A=resDMD(u,v,s,X,Yinds,binds,filebase,verbose,load=load,chunks=chunks)
 
 
     if runpseudo:
@@ -394,3 +373,9 @@ if __name__ == "__main__":
     stop=timeit.default_timer()
     
     print('runtime:',stop-start)
+    
+    if args.dense<3:
+        shutil.rmtree(filebase+'X0')
+        shutil.rmtree(filebase+'X')
+        shutil.rmtree(filebase+'u')
+        shutil.rmtree(filebase+'v')

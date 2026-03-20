@@ -18,13 +18,5 @@ filebase0='data/dmd2'
 Ks=(`ls ${filebase0}/${N}`)
 K=${Ks[$SLURM_ARRAY_TASK_ID]}
 if [ ! -f ${filebase0}/${N}/${K}/${M}evals.npy ]; then
-	./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --runpseudo 0 --load 1 --filesuffix ${M} --mem 40GB --filebase ${filebase0}/${N}/${K}/ 
-	rm -rf ${filebase0}/${N}/${K}/${M}X0
-	rm -rf ${filebase0}/${N}/${K}/${M}X
-	rm -rf ${filebase0}/${N}/${K}/${M}v
-	rm -rf ${filebase0}/${N}/${K}/${M}u
-
-	rm ${filebase0}/${N}/${K}/${M}phis.npy
-	rm ${filebase0}/${N}/${K}/${M}phitildes.npy
-	rm ${filebase0}/${N}/${K}/${M}A.npy
+	./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 6000 --runpseudo 0 --dense 1 --filesuffix ${M} --mem 40GB --filebase ${filebase0}/${N}/${K}/ 
 fi

@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=80G
+#SBATCH --mem=64G
 #SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
 #SBATCH --output=outs/dmd2_%a.out # where STDOUT goes
@@ -16,9 +16,4 @@ M=${SLURM_ARRAY_TASK_ID}
 N=10000
 K=10000
 filebase0=data/dmd
-./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 5000 --dense_amplitudes 1 --runpseudo 1 --load 1 --filesuffix ${M} --mem 40GB --filebase ${filebase0}/${N}/${K}/ 
-rm -rf ${filebase0}/${N}/${K}/${M}X0
-rm -rf ${filebase0}/${N}/${K}/${M}X
-rm -rf ${filebase0}/${N}/${K}/${M}v
-rm -rf ${filebase0}/${N}/${K}/${M}u
-
+./dmd.py --M $M --D $((N/2*M)) --seed 100 --rank 6000 --dense 2 --runpseudo 1 --filesuffix ${M} --mem 40GB --filebase ${filebase0}/${N}/${K}/ 
