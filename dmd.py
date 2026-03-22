@@ -7,7 +7,6 @@ import timeit
 from scipy.linalg import svd, eig, lu_factor, lu_solve,eigh
 from scipy.interpolate import interp1d
 from scipy.optimize import root_scalar
-from sklearn.utils.extmath import randomized_svd
 import argparse
 import dask.array as da
 from dask.distributed import Client, LocalCluster
@@ -97,13 +96,13 @@ def load_data(filebase0,filesuffix,verbose=False,num_traj=0,D=0,M=1,load=False, 
         print('data load runtime:',stop-start,flush=True)
     return X,lengths,filebase,dt
     
-def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,disk=True,chunks=4096):
+def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,disk=True,chunks=4096,seed=1):
     if not load or not os.path.exists(filebase+'s.npy') or not os.path.exists(filebase+'u') or not os.path.exists(filebase+'v'):
         start=timeit.default_timer()
         if rank is None:
             u,sda,v=da.linalg.svd(X)
         else:
-            u,sda,v=da.linalg.svd_compressed(X, rank, n_oversamples=rank, compute=False)
+            u,sda,v=da.linalg.svd_compressed(X, rank, n_oversamples=rank, compute=False, seed=seed)
         stop=timeit.default_timer()
         if verbose:
             print('svd runtime:',stop-start,flush=True)
@@ -127,7 +126,8 @@ def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,disk=True,chunks=
         if rank is None:
             rank=min(X.shape[0],X.shape[1])
 
-    print('numerical rank:', rank,flush=True)
+    if verbose:
+        print('numerical rank:', rank,flush=True)
     
     #since we'll use u and v many times, compute and store them here
     start=timeit.default_timer()
@@ -163,7 +163,8 @@ def PCA(X,filebase,verbose=False,rank=None,tol=None,load=False,disk=True,chunks=
             print('Warning: numerical precision may be limiting achievable pcatol')
     else:
         r=rank
-    
+    if verbose:
+        print('rank:', r,flush=True)
     return s[:r],u[:,:r],v[:r]
 
 def resDMD(U,V,S,X,Yinds,binds,filebase,verbose=False,load=False,dense=0,chunks=4096):
@@ -341,7 +342,8 @@ if __name__ == "__main__":
     rank = args.rank
     runpseudo = args.runpseudo
     load = args.load
-    chunks = args.chunks
+    chunks = args.chunk,args=seeas
+    np.random.seed(seed)
 
     start=timeit.default_timer()
     X,lengths,filebase,dt=load_data(filebase0,filesuffix,verbose,num_traj,D,M,load)
@@ -349,16 +351,16 @@ if __name__ == "__main__":
 
     Xinds=np.setdiff1d(np.arange(np.sum(lengths)),np.cumsum(lengths)-1)
     Yinds=np.setdiff1d(np.arange(np.sum(lengths)),np.concatenate([[0],np.cumsum(lengths)[:-1]]))
-    if args.dense==0:
+    if args.dense>0:
         binds=Xinds
     else:
         binds=np.array([0]+list(np.cumsum(lengths)[:-1]))
     if verbose:
         print('shape:', X[Xinds].shape, flush=True)
 
-    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,load=load,chunks=chunks)
+    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,load=load,chunks=chunks,args=seed)
     
-    evals,evecs,res,bs,phis,phitildes,A=resDMD(u,v,s,X,Yinds,binds,filebase,verbose,load=load,chunks=chunks)
+    evals,evecs,res,bs,phis,phitildes,A=resDMD(u,v,s,X,Yinds,binds,filebase,verbose,load=load,dense=args.dense,chunks=chunks)
 
 
     if runpseudo:

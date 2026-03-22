@@ -9,13 +9,13 @@ if __name__ == "__main__":
     #Command line arguments
     parser = argparse.ArgumentParser(description='Numerical integration of networks of phase oscillators.')
     parser.add_argument("--filebase", type=str, required=True, dest='filebase', help='Base string for file output.')
-    parser.add_argument("--remove", type=bool, required=False, default=True, dest='remove', help='Remove files.')
+    parser.add_argument("--remove", type=int, required=False, default=0, dest='remove', help='Remove files.')
+    parser.add_argument("--load", type=int, required=False, default=1, dest='load', help='Load from orders.npy.')
     args = parser.parse_args()
     print(*sys.argv,flush=True)
 
 
     filebase=args.filebase
-    
     # Make avgorder from cluster output
 
     Ns=100000*np.arange(1,3)
@@ -26,7 +26,8 @@ if __name__ == "__main__":
         print(N, Ks)
         for K in Ks:
             rs=[]
-            if args.remove and os.path.exists(args.filebase+'/%s/%s/orders.npy'%(N,K)):
+            if args.load and os.path.exists(args.filebase+'/%s/%s/orders.npy'%(N,K)):
+                print('loaded orders')
                 rs=np.load(args.filebase+'/%s/%s/orders.npy'%(N,K)).tolist()
             files=os.listdir(args.filebase+'/%s/%s'%(N,K))
             for file in files:

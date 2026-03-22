@@ -31,7 +31,7 @@ for seed in `seq 1 500`; do
 		jobs=`jobs | wc -l`
 	done
 	if [ ! -f data/scaled/$N/$K/${seed}.out ]; then
-		./kuramoto -N $N -K $K -s $seed -c $C -t 100 -d 0.01 -g $gid -D 0 -nvR data/scaled/$N/$K/$seed > /dev/null &
+		./kuramoto -N $N -K $K -s $seed -c $C -t 100 -d 0.01 -g $gid -D 0 -a 1E-3 -r 1E-3 -nvR data/scaled/$N/$K/$seed > /dev/null &
 	fi
 	gid=$((gid+1))
 	if [ $gid -ge 1 ]; then

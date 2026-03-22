@@ -1,17 +1,18 @@
 #!/bin/bash
 #SBATCH --account=isaac-utk0437
-#SBATCH --partition=campus
-#SBATCH --qos=campus
+#SBATCH --partition=short
+#SBATCH --qos=short
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
+#SBATCH --mem=100G
+#SBATCH --time=00-03:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
 #SBATCH --output=outs/dmd1_%a.out # where STDOUT goes
 #SBATCH --error=outs/dmd1_%a.err # where STDERR goes
 #SBATCH --array=[1-5]
 
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 M=${SLURM_ARRAY_TASK_ID}
 N=10000
 K=2
