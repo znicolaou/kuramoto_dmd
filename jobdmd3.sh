@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=isaac-utk0437
-#SBATCH --partition=short
-#SBATCH --qos=short
+#SBATCH --partition=campus
+#SBATCH --qos=campus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8

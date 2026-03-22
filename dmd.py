@@ -342,7 +342,7 @@ if __name__ == "__main__":
     rank = args.rank
     runpseudo = args.runpseudo
     load = args.load
-    chunks = args.chunk,args=seeas
+    chunks = args.chunks
     np.random.seed(seed)
 
     start=timeit.default_timer()
@@ -358,7 +358,7 @@ if __name__ == "__main__":
     if verbose:
         print('shape:', X[Xinds].shape, flush=True)
 
-    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,load=load,chunks=chunks,args=seed)
+    s,u,v=PCA(X[Xinds],filebase,verbose,rank=rank,tol=pcatol,load=load,chunks=chunks,seed=seed)
     
     evals,evecs,res,bs,phis,phitildes,A=resDMD(u,v,s,X,Yinds,binds,filebase,verbose,load=load,dense=args.dense,chunks=chunks)
 
