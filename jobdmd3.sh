@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=100G
-#SBATCH --time=00-03:00:00 # Max runtime in DD-HH:MM:SS format.
+#SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
 #SBATCH --output=outs/dmd3_%a.out # where STDOUT goes
 #SBATCH --error=outs/dmd3_%a.err # where STDERR goes

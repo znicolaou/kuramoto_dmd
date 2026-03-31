@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --account=isaac-utk0437
-#SBATCH --partition=short
-#SBATCH --qos=short
+#SBATCH --partition=campus
+#SBATCH --qos=campus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=100G
-#SBATCH --time=00-03:00:00 # Max runtime in DD-HH:MM:SS format.
+#SBATCH --time=01-00:00:00 # Max runtime in DD-HH:MM:SS format.
 #SBATCH --export=all
 #SBATCH --output=outs/dmd1_%a.out # where STDOUT goes
 #SBATCH --error=outs/dmd1_%a.err # where STDERR goes

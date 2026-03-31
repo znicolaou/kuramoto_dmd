@@ -19,7 +19,7 @@ i=$SLURM_ARRAY_TASK_ID
 gid=0
 for seed in `seq 1 750`; do
 	N=$((5000*i))
-	KS="0 2 $((5000*i))"
+	KS="2 $((5000*i))"
 	for K in $KS; do 
 	echo $N $K $dK $seed
 	mkdir -p data/normal/$N/$K
@@ -30,15 +30,12 @@ for seed in `seq 1 750`; do
 		jobs=`jobs | wc -l`
 	done
 
-	if [ ! -f data/normal/$N/$K/${seed}.out ]; then
-		./kuramoto -N $N -K $K -s $seed -c 1.75 -t 100 -d 0.01 -g $gid -D 0 -a 1E-3 -r 1E-3 -nv data/normal/$N/$K/$seed > /dev/null &
-	fi
-	if [ ! -f data/lorentz/$N/$K/${seed}.out ]; then
-		./kuramoto -N $N -K $K -s $seed -c 3.00 -t 100 -d 0.01 -g $gid -D 0 -a 1E-3 -r 1E-3 -v data/lorentz/$N/$K/$seed > /dev/null &
-	fi
+	./kuramoto -N $N -K $K -s $seed -c 1.75 -t 100 -d 0.01 -g $gid -D 0 -nv data/normal/$N/$K/$seed > /dev/null &
+	./kuramoto -N $N -K $K -s $seed -c 3.00 -t 100 -d 0.01 -g $gid -D 0 -a 1E-3 -r 1E-3 -v data/lorentz/$N/$K/$seed > /dev/null &
 	gid=$((gid+1))
 	if [ $gid -ge 2 ]; then
 		gid=0
 	fi
 done
 done
+wait

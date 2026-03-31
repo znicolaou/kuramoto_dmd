@@ -21,7 +21,7 @@ dt=0.01
 T=100
 C=1.75
 mkdir -p data/dmd/${N}/${K}
-python makeic.py -N $N -K $K --seed 1 --dt $dt -c $C -T $T --filebase data/dmd/${N}/${K}
+python makeic.py -N $N -K $K --seed 100 --dt $dt -c $C -T $T --filebase data/dmd/${N}/${K}
 C=1.00
 mkdir -p data/dmd2/${N}/${K}
-python makeic.py -N $N -K $K --seed 1 --dt $dt -c $C -T $T --filebase data/dmd2/${N}/${K}
+python makeic.py -N $N -K $K --seed 100 --dt $dt -c $C -T $T --filebase data/dmd2/${N}/${K}
